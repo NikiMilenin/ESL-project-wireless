@@ -32,7 +32,7 @@
 
 #include "estc_service.h"
 
-#define DEVICE_NAME                     "NikitaMilenin"                              /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "NikitaMilenin"                         /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL                300                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 
@@ -57,11 +57,15 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
-static ble_uuid_t m_adv_uuids[] =                                               /**< Universally unique service identifiers. */
+
+// Workshop 2
+
+static ble_uuid_t m_adv_uuids[] =                                              
 {
     {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
     {ESTC_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN}
 };
+
 
 ble_estc_service_t m_estc_service; /**< ESTC example BLE service */
 
@@ -405,11 +409,15 @@ static void advertising_init(void)
 
     memset(&init, 0, sizeof(init));
 
+
+    //Workshop 1
+    //Workshop 2
     init.advdata.name_type               = BLE_ADVDATA_FULL_NAME;
     init.advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
     init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     init.srdata.uuids_complete.p_uuids  = m_adv_uuids;
+    //init.srdata.name_type  = BLE_ADVDATA_FULL_NAME;
 
     init.config.ble_adv_fast_enabled  = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
@@ -501,7 +509,7 @@ int main(void)
     conn_params_init();
 
     // Start execution.
-    NRF_LOG_INFO("ESTC GATT service example started");
+    NRF_LOG_INFO("ESTC GATT service started");
     application_timers_start();
 
     advertising_start();
