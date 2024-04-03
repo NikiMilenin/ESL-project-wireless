@@ -15,12 +15,20 @@
 
 // Workshop 3
 #define ESTC_GATT_CHAR_1_UUID 0xf348 // 1st characteristic uuid
+#define ESTC_GATT_CHAR_1_VALUE_SIZE 4
+
 #define ESTC_GATT_CHAR_2_UUID 0xf349 // 2nd characteristic uuid
+#define ESTC_GATT_CHAR_2_VALUE_SIZE 4
+
 #define ESTC_GATT_CHAR_3_UUID 0xf350 // 3rd characteristic uuid
+#define ESTC_GATT_CHAR_3_VALUE_SIZE 4
 
 //Workshop 4
 #define ESTC_GATT_CHAR_N_UUID 0xf351 // "Notification" characteristics
+#define ESTC_GATT_CHAR_N_VALUE_SIZE 4
+
 #define ESTC_GATT_CHAR_I_UUID 0xf352 // "Indication" characteristics
+#define ESTC_GATT_CHAR_I_VALUE_SIZE 4
 
 #define ESTC_GATT_CHAR_DESC_MAX_SIZE 40
 typedef struct
@@ -38,16 +46,24 @@ typedef struct
 typedef struct
 {
     uint16_t char_uuid;
+    ble_uuid128_t service_uuid;
+    ble_gatts_char_handles_t *char_handle;
+    uint16_t value_size;
+
+    short char_read;
+    short char_write;
+    short char_write_wo_resp;
+    short notif;
+    short ind;
+
     uint8_t* descriptor;
     int desc_size;
-    short char_read;  // read characteristicks 
-    short char_write;  // write characteristicks
-    short desc_write;  // write characteristicks description
+    short desc_write; 
 } ble_estc_char_cfg;
 
 ret_code_t estc_ble_service_init(ble_estc_service_t *service);
 
-void estc_update_characteristic_indication_value(ble_estc_service_t *service, uint8_t *value);
-void estc_update_characteristic_notification_value(ble_estc_service_t *service, uint8_t *value);
+void estc_characteristic_indication(ble_estc_service_t *service, uint8_t *value, ble_gatts_char_handles_t* char_handle,  uint16_t value_size);
+void estc_characteristic_notification(ble_estc_service_t *service, uint8_t *value, ble_gatts_char_handles_t* char_handle,  uint16_t value_size);
 
 #endif /* ESTC_SERVICE_H__ */

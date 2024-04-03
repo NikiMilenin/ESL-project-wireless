@@ -103,12 +103,12 @@ static uint8_t value2 = 0;
 void timer_1_timeout_handler()
 {
     value1 += 1;
-    estc_update_characteristic_indication_value(&m_estc_service, &value1);
+    estc_characteristic_indication(&m_estc_service, &value1, &(m_estc_service.char_ind_handle), ESTC_GATT_CHAR_I_VALUE_SIZE);
 }
 void timer_2_timeout_handler()
 {
     value2 += 3;
-    estc_update_characteristic_notification_value(&m_estc_service, &value2);
+    estc_characteristic_notification(&m_estc_service, &value2, &(m_estc_service.char_notif_handle), ESTC_GATT_CHAR_N_VALUE_SIZE);
 }
 static void timers_init(void)
 {
