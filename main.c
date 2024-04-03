@@ -58,6 +58,10 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
 
+APP_TIMER_DEF(char_1_timer_id);
+#define TIMER_1_INTERVAL     APP_TIMER_TICKS(4000)
+APP_TIMER_DEF(char_2_timer_id);
+#define TIMER_2_INTERVAL     APP_TIMER_TICKS(1500)
 // Workshop 2
 
 static ble_uuid_t m_adv_uuids[] =                                              
@@ -67,7 +71,7 @@ static ble_uuid_t m_adv_uuids[] =
 };
 
 
-ble_estc_service_t m_estc_service; /**< ESTC example BLE service */
+ble_estc_service_t m_estc_service;
 
 static void advertising_start(void);
 
@@ -92,10 +96,26 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  *
  * @details Initializes the timer module. This creates and starts application timers.
  */
+
+static uint8_t value1 = 0;
+static uint8_t value2 = 0;
+
+void timer_1_timeout_handler()
+{
+    value1 += 1;
+    estc_update_characteristic_indication_value(&m_estc_service, &value1);
+}
+void timer_2_timeout_handler()
+{
+    value2 += 3;
+    estc_update_characteristic_notification_value(&m_estc_service, &value2);
+}
 static void timers_init(void)
 {
     // Initialize timer module.
     ret_code_t err_code = app_timer_init();
+    app_timer_create(&char_1_timer_id, APP_TIMER_MODE_REPEATED, timer_1_timeout_handler);
+    app_timer_create(&char_2_timer_id, APP_TIMER_MODE_REPEATED, timer_2_timeout_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -172,6 +192,7 @@ static void services_init(void)
 }
 
 
+
 /**@brief Function for handling the Connection Parameters Module.
  *
  * @details This function will be called for all events in the Connection Parameters Module which
@@ -231,6 +252,8 @@ static void conn_params_init(void)
  */
 static void application_timers_start(void)
 {
+    app_timer_start(char_1_timer_id, TIMER_1_INTERVAL, NULL);
+    app_timer_start(char_2_timer_id, TIMER_2_INTERVAL, NULL);
 }
 
 
@@ -520,6 +543,7 @@ int main(void)
         idle_state_handle();
     }
 }
+
 
 
 /**

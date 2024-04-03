@@ -1,33 +1,3 @@
-/**
- * Copyright 2022 Evgeniy Morozov
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
- * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE
-*/
-
 #ifndef ESTC_SERVICE_H__
 #define ESTC_SERVICE_H__
 
@@ -47,20 +17,37 @@
 #define ESTC_GATT_CHAR_1_UUID 0xf348 // 1st characteristic uuid
 #define ESTC_GATT_CHAR_2_UUID 0xf349 // 2nd characteristic uuid
 #define ESTC_GATT_CHAR_3_UUID 0xf350 // 3rd characteristic uuid
-#define ESTC_GATT_CHAR_4_UUID 0xf351 
+
+//Workshop 4
+#define ESTC_GATT_CHAR_N_UUID 0xf351 // "Notification" characteristics
+#define ESTC_GATT_CHAR_I_UUID 0xf352 // "Indication" characteristics
 
 #define ESTC_GATT_CHAR_DESC_MAX_SIZE 40
 typedef struct
 {
     uint16_t service_handle;
     uint16_t connection_handle;
-    ble_gatts_char_handles_t characteristic_handle;
+    ble_gatts_char_handles_t char_1_handle;
+    ble_gatts_char_handles_t char_2_handle;
+    ble_gatts_char_handles_t char_3_handle;
+    ble_gatts_char_handles_t char_ind_handle;
+    ble_gatts_char_handles_t char_notif_handle;
 } ble_estc_service_t;
+
+
+typedef struct
+{
+    uint16_t char_uuid;
+    uint8_t* descriptor;
+    int desc_size;
+    short char_read;  // read characteristicks 
+    short char_write;  // write characteristicks
+    short desc_write;  // write characteristicks description
+} ble_estc_char_cfg;
 
 ret_code_t estc_ble_service_init(ble_estc_service_t *service);
 
-void estc_ble_service_on_ble_event(const ble_evt_t *ble_evt, void *ctx);
-
-void estc_update_characteristic_1_value(ble_estc_service_t *service, int32_t *value);
+void estc_update_characteristic_indication_value(ble_estc_service_t *service, uint8_t *value);
+void estc_update_characteristic_notification_value(ble_estc_service_t *service, uint8_t *value);
 
 #endif /* ESTC_SERVICE_H__ */
