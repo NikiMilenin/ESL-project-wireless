@@ -30,7 +30,7 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_log_backend_usb.h"
 
-#include "estc_service.h"
+#include "led_service.h"
 
 #define DEVICE_NAME                     "NikitaMilenin"                         /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -57,21 +57,14 @@ BLE_ADVERTISING_DEF(m_advertising);                                             
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
-
-APP_TIMER_DEF(char_1_timer_id);
-#define TIMER_1_INTERVAL     APP_TIMER_TICKS(4000)
-APP_TIMER_DEF(char_2_timer_id);
-#define TIMER_2_INTERVAL     APP_TIMER_TICKS(1500)
-// Workshop 2
-
 static ble_uuid_t m_adv_uuids[] =                                              
 {
     {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
-    {ESTC_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN}
+    {LED_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN}
 };
 
 
-ble_estc_service_t m_estc_service;
+ble_led_service_t m_led_service;
 
 static void advertising_start(void);
 
@@ -97,25 +90,10 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  * @details Initializes the timer module. This creates and starts application timers.
  */
 
-static uint8_t value1 = 0;
-static uint8_t value2 = 0;
-
-void timer_1_timeout_handler()
-{
-    value1 += 1;
-    estc_characteristic_indication(&m_estc_service, &value1, &(m_estc_service.char_ind_handle), ESTC_GATT_CHAR_I_VALUE_SIZE);
-}
-void timer_2_timeout_handler()
-{
-    value2 += 3;
-    estc_characteristic_notification(&m_estc_service, &value2, &(m_estc_service.char_notif_handle), ESTC_GATT_CHAR_N_VALUE_SIZE);
-}
 static void timers_init(void)
 {
     // Initialize timer module.
     ret_code_t err_code = app_timer_init();
-    app_timer_create(&char_1_timer_id, APP_TIMER_MODE_REPEATED, timer_1_timeout_handler);
-    app_timer_create(&char_2_timer_id, APP_TIMER_MODE_REPEATED, timer_2_timeout_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -187,8 +165,9 @@ static void services_init(void)
     err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
     APP_ERROR_CHECK(err_code);
 
-    err_code = estc_ble_service_init(&m_estc_service);
+    err_code = led_ble_service_init(&m_led_service);
     APP_ERROR_CHECK(err_code);
+
 }
 
 
@@ -252,8 +231,6 @@ static void conn_params_init(void)
  */
 static void application_timers_start(void)
 {
-    app_timer_start(char_1_timer_id, TIMER_1_INTERVAL, NULL);
-    app_timer_start(char_2_timer_id, TIMER_2_INTERVAL, NULL);
 }
 
 
@@ -321,13 +298,16 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected (conn_handle: %d)", p_ble_evt->evt.gap_evt.conn_handle);
             // LED indication will be changed when advertising starts.
+            rgb_off();
             break;
 
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("Connected (conn_handle: %d)", p_ble_evt->evt.gap_evt.conn_handle);
 
-            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+            err_code = bsp_indication_set(0);
             APP_ERROR_CHECK(err_code);
+            rgb_on();
+            //leds_init();
 
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
@@ -360,6 +340,10 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
+            break;
+
+        case BLE_GATTS_EVT_WRITE:
+            led_on_write(p_ble_evt, &m_led_service);
             break;
 
         default:
@@ -431,16 +415,11 @@ static void advertising_init(void)
     ble_advertising_init_t init;
 
     memset(&init, 0, sizeof(init));
-
-
-    //Workshop 1
-    //Workshop 2
     init.advdata.name_type               = BLE_ADVDATA_FULL_NAME;
     init.advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
     init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     init.srdata.uuids_complete.p_uuids  = m_adv_uuids;
-    //init.srdata.name_type  = BLE_ADVDATA_FULL_NAME;
 
     init.config.ble_adv_fast_enabled  = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
@@ -459,6 +438,7 @@ static void advertising_init(void)
  *
  * @param[out] p_erase_bonds  Will be true if the clear bonding button was pressed to wake the application up.
  */
+
 static void buttons_leds_init(void)
 {
     ret_code_t err_code;
@@ -522,6 +502,7 @@ int main(void)
     // Initialize.
     log_init();
     timers_init();
+    leds_init();
     buttons_leds_init();
     power_management_init();
     ble_stack_init();
