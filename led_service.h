@@ -37,6 +37,8 @@
 #define LED2_B_PIN NRF_GPIO_PIN_MAP(0, 12)
 #define PWM_RGB_TOP_VALUE 255
 
+#define RGB_SIZE 3
+
 typedef struct
 {
     uint16_t service_handle;
@@ -47,7 +49,7 @@ typedef struct
 
 ret_code_t led_ble_service_init(ble_led_service_t*);
 ret_code_t leds_init();
-void change_led_data(uint8_t const *);
+void change_led_data(uint8_t const *, ble_led_service_t * service);
 void led_on_write(ble_evt_t const *, ble_led_service_t *);
 void rgb_on();
 void rgb_off();
