@@ -97,6 +97,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/led_service.c \
+  $(PROJ_DIR)/memory.c \
+  $(PROJ_DIR)/led.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
