@@ -15,12 +15,8 @@
 #include "nrf_sdh_soc.h"
 #include "nrf_sdh_ble.h"
 #include "app_timer.h"
-#include "fds.h"
-#include "peer_manager.h"
-#include "peer_manager_handler.h"
 #include "bsp_btn_ble.h"
 #include "sensorsim.h"
-#include "ble_conn_state.h"
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
@@ -31,6 +27,13 @@
 #include "nrf_log_backend_usb.h"
 
 #include "led_service.h"
+
+#include "fds.h"
+#include "peer_manager.h"
+#include "peer_manager_handler.h"
+
+#include "app_config.h"
+
 
 #define DEVICE_NAME                     "NikitaMilenin"                         /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "NordicSemiconductor"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -299,6 +302,9 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             NRF_LOG_INFO("Disconnected (conn_handle: %d)", p_ble_evt->evt.gap_evt.conn_handle);
             // LED indication will be changed when advertising starts.
             rgb_off();
+#if CLEAR_PEERS > 0
+            pm_peers_delete();
+#endif
             break;
 
         case BLE_GAP_EVT_CONNECTED:
@@ -493,6 +499,43 @@ static void advertising_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
+static void pm_evt_handler(pm_evt_t const * p_evt)
+{
+    pm_handler_on_pm_evt(p_evt);
+    pm_handler_disconnect_on_sec_failure(p_evt);
+}
+
+static void peer_manager_init()
+{
+    ble_gap_sec_params_t sec_param;
+    ret_code_t err_code;
+    err_code = pm_init();
+    APP_ERROR_CHECK(err_code);
+    memset(&sec_param, 0, sizeof(ble_gap_sec_params_t));
+#if CLEAR_PEERS > 0
+    pm_peers_delete();
+#endif
+    // Security parameters to be used for all security procedures.
+    sec_param.bond = true;
+    sec_param.mitm = false;
+    sec_param.lesc = 0;
+    sec_param.keypress = 0;
+    sec_param.io_caps = BLE_GAP_IO_CAPS_NONE;
+    sec_param.oob = false;
+    sec_param.min_key_size = 7;
+    sec_param.max_key_size = 16;
+    sec_param.kdist_own.enc = 1;
+    sec_param.kdist_own.id = 1;
+    sec_param.kdist_peer.enc = 1;
+    sec_param.kdist_peer.id = 1;
+
+    err_code = pm_sec_params_set(&sec_param);
+    APP_ERROR_CHECK(err_code);
+    err_code = pm_register(pm_evt_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
+
 
 /**@brief Function for application main entry.
  */
@@ -505,6 +548,7 @@ int main(void)
     buttons_leds_init();
     power_management_init();
     ble_stack_init();
+    peer_manager_init();
     gap_params_init();
     gatt_init();
     services_init();

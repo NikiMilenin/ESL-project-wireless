@@ -20,8 +20,9 @@ static ret_code_t add_change_color_char(ble_led_service_t* service)
     ble_gatts_attr_md_t attr_md = { 0 };
     attr_md.vloc = BLE_GATTS_VLOC_STACK;
 
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&(attr_md.read_perm));
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&(attr_md.write_perm));
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&(attr_md.read_perm));
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&(attr_md.write_perm));
+
 
     ble_gatts_attr_t attr_char_value = { 0 };
     attr_char_value.p_uuid = &characteristic_uuid;
@@ -31,6 +32,15 @@ static ret_code_t add_change_color_char(ble_led_service_t* service)
     attr_char_value.init_len = sizeof(uint8_t) * RGB_SIZE;
     uint8_t data[] = {0, 0, 0};
     attr_char_value.p_value = data;
+    
+    
+    ble_gatts_attr_md_t cccd_md;
+    memset(&cccd_md, 0, sizeof(cccd_md));
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&cccd_md.write_perm);
+    cccd_md.vloc                = BLE_GATTS_VLOC_STACK;    
+    char_md.p_cccd_md           = &cccd_md;
+    
 
     error_code = sd_ble_gatts_characteristic_add(service->service_handle, &char_md, 
                                                 &attr_char_value, &(service->change_led_handle));

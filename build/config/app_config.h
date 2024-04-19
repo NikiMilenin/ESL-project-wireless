@@ -127,4 +127,8 @@
 
 // </e>
 
+#ifndef CLEAR_PEERS
+#define CLEAR_PEERS 0
+#endif
+
 #endif
